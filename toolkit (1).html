@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050810;
+    --surface: #0c1120;
+    --surface2: #111827;
+    --border: rgba(99,179,237,0.15);
+    --accent: #38bdf8;
+    --accent2: #818cf8;
+    --accent3: #34d399;
+    --accent4: #fb7185;
+    --gold: #fbbf24;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --glow: 0 0 20px rgba(56,189,248,0.3);
+    --glow2: 0 0 30px rgba(129,140,248,0.25);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ─── ANIMATED BG ─── */
+  .bg-grid {
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: gridDrift 30s linear infinite;
+  }
+  @keyframes gridDrift { to { background-position: 50px 50px; } }
+
+  .orb {
+    position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; pointer-events: none;
+    animation: orbFloat 8s ease-in-out infinite alternate;
+  }
+  .orb-1 { width:400px; height:400px; background:rgba(56,189,248,0.08); top:-100px; right:-100px; }
+  .orb-2 { width:350px; height:350px; background:rgba(129,140,248,0.07); bottom:-80px; left:-80px; animation-delay:-4s; }
+  .orb-3 { width:200px; height:200px; background:rgba(52,211,153,0.06); top:50%; left:50%; animation-delay:-2s; }
+  @keyframes orbFloat { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,40px) scale(1.1); } }
+
+  /* ─── WRAPPER ─── */
+  .wrapper { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* ─── HEADER ─── */
+  header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    animation: fadeDown 0.8s ease both;
+  }
+  @keyframes fadeDown { from { opacity:0; transform:translateY(-30px); } to { opacity:1; transform:translateY(0); } }
+
+  .logo-tag {
+    display: inline-block;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.4em;
+    color: var(--accent);
+    background: rgba(56,189,248,0.1);
+    border: 1px solid rgba(56,189,248,0.25);
+    padding: 4px 16px;
+    border-radius: 100px;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 30%, var(--accent) 70%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.05;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.95rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* ─── NAV TABS ─── */
+  .nav {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+  .nav-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    padding: 10px 20px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+  }
+  .nav-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .nav-btn:hover { color: var(--text); border-color: var(--accent); transform: translateY(-2px); }
+  .nav-btn:hover::before { opacity: 0.1; }
+  .nav-btn.active {
+    color: #fff;
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(56,189,248,0.15), rgba(129,140,248,0.15));
+    box-shadow: var(--glow);
+  }
+
+  /* ─── PANELS ─── */
+  .panel { display: none; animation: panelIn 0.4s ease both; }
+  .panel.active { display: block; }
+  @keyframes panelIn { from { opacity:0; transform:translateY(10px) scale(0.99); } to { opacity:1; transform:none; } }
+
+  /* ─── CARD ─── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.3s;
+  }
+  .card:hover { box-shadow: var(--glow2); }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.5;
+  }
+
+  .card-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ─── CALCULATOR ─── */
+  .calc-wrap { max-width: 380px; margin: 0 auto; }
+
+  .calc-display {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.2rem;
+    text-align: right;
+    position: relative;
+    overflow: hidden;
+  }
+  .calc-display::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(56,189,248,0.03), transparent);
+  }
+  .calc-expr {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    min-height: 1.2em;
+    margin-bottom: 0.3rem;
+  }
+  .calc-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.02em;
+    transition: all 0.2s;
+    word-break: break-all;
+  }
+  .calc-value.pop { animation: calcPop 0.15s ease; }
+  @keyframes calcPop { 50% { transform: scale(1.04); color: var(--accent); } }
+
+  .calc-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .calc-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 18px 0;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .calc-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.15), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .calc-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+  .calc-btn:active::after { opacity: 1; }
+  .calc-btn:active { transform: scale(0.95); }
+
+  .calc-btn.op { background: rgba(56,189,248,0.12); color: var(--accent); border-color: rgba(56,189,248,0.3); }
+  .calc-btn.eq { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: none; grid-column: span 1; box-shadow: 0 4px 20px rgba(56,189,248,0.35); }
+  .calc-btn.eq:hover { box-shadow: 0 6px 30px rgba(56,189,248,0.5); }
+  .calc-btn.ac { background: rgba(251,113,133,0.15); color: var(--accent4); border-color: rgba(251,113,133,0.3); }
+  .calc-btn.span2 { grid-column: span 2; }
+
+  /* ─── CONVERTER ─── */
+  .conv-tabs {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem;
+  }
+  .conv-tab {
+    font-size: 0.78rem;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .conv-tab.active, .conv-tab:hover { border-color: var(--accent3); color: var(--accent3); background: rgba(52,211,153,0.08); }
+
+  .conv-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  .conv-field { display: flex; flex-direction: column; gap: 6px; }
+  .conv-label {
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .conv-input, .conv-select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.1rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+  .conv-input:focus, .conv-select:focus {
+    border-color: var(--accent3);
+    box-shadow: 0 0 0 3px rgba(52,211,153,0.12);
+  }
+  .conv-select { font-size: 0.85rem; cursor: pointer; }
+  .conv-select option { background: #0c1120; }
+  .swap-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--accent3);
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.3s;
+    flex-shrink: 0;
+    margin-top: 22px;
+  }
+  .swap-btn:hover { transform: rotate(180deg); border-color: var(--accent3); box-shadow: 0 0 15px rgba(52,211,153,0.25); }
+
+  .conv-result {
+    background: rgba(52,211,153,0.07);
+    border: 1px solid rgba(52,211,153,0.2);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.4rem;
+    color: var(--accent3);
+    text-align: center;
+    transition: all 0.3s;
+    margin-top: 0.5rem;
+  }
+  .conv-result-sub { font-size: 0.75rem; color: var(--muted); font-family: 'DM Sans'; margin-top: 4px; }
+
+  /* ─── BMI ─── */
+  .bmi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-bottom: 1.5rem; }
+  @media(max-width:500px){ .bmi-grid { grid-template-columns: 1fr; } }
+
+  .inp-group { display: flex; flex-direction: column; gap: 6px; }
+  .inp-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .inp-field {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .inp-field:focus { border-color: var(--accent2); box-shadow: 0 0 0 3px rgba(129,140,248,0.12); }
+
+  .unit-toggle {
+    display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem;
+  }
+  .unit-btn {
+    padding: 6px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+  }
+  .unit-btn.active { border-color: var(--accent2); color: var(--accent2); background: rgba(129,140,248,0.08); }
+
+  .calc-action-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #fff;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 20px rgba(129,140,248,0.3);
+  }
+  .calc-action-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(129,140,248,0.45); }
+
+  .bmi-result-area {
+    margin-top: 1.5rem;
+    display: none;
+    animation: fadeUp 0.4s ease both;
+  }
+  .bmi-result-area.show { display: block; }
+
+  .bmi-meter-wrap { margin: 1rem 0; }
+  .bmi-meter {
+    height: 10px;
+    border-radius: 100px;
+    background: linear-gradient(90deg, #38bdf8, #34d399, #fbbf24, #fb7185);
+    position: relative;
+    overflow: visible;
+  }
+  .bmi-needle {
+    position: absolute;
+    top: 50%;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 12px rgba(255,255,255,0.5);
+    transform: translate(-50%,-50%);
+    transition: left 0.8s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .bmi-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 0.65rem;
+    color: var(--muted);
+  }
+
+  .bmi-value-big {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 3.5rem;
+    font-weight: 900;
+    text-align: center;
+    line-height: 1;
+  }
+  .bmi-category {
+    text-align: center;
+    font-size: 0.9rem;
+    margin-top: 4px;
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 0.1em;
+  }
+  .bmi-tip {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  /* ─── WORLD CLOCK ─── */
+  .clock-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+
+  .clock-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+  }
+  .clock-card:hover { border-color: var(--accent); box-shadow: var(--glow); transform: translateY(-4px); }
+  .clock-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    transition: opacity 0.3s;
+    opacity: 0;
+  }
+  .clock-card:hover::before { opacity: 1; }
+  .clock-card.c1::before { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .clock-card.c2::before { background: linear-gradient(90deg, var(--accent3), var(--accent)); }
+  .clock-card.c3::before { background: linear-gradient(90deg, var(--gold), var(--accent3)); }
+  .clock-card.c4::before { background: linear-gradient(90deg, var(--accent2), var(--accent4)); }
+  .clock-card.c5::before { background: linear-gradient(90deg, var(--accent4), var(--gold)); }
+  .clock-card.c6::before { background: linear-gradient(90deg, var(--accent), var(--accent4)); }
+
+  .clock-city {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .clock-country {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 0.8rem;
+  }
+  .clock-emoji { font-size: 1rem; margin-right: 4px; }
+
+  .clock-time {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .clock-secs {
+    font-size: 1.1rem;
+    color: var(--accent);
+    font-weight: 400;
+  }
+  .clock-ampm {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-left: 4px;
+  }
+  .clock-date {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 6px;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .clock-offset {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    font-size: 0.65rem;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Analog mini clock */
+  .mini-clock-svg {
+    position: absolute;
+    bottom: 1rem; right: 1rem;
+    opacity: 0.6;
+    transition: opacity 0.3s;
+  }
+  .clock-card:hover .mini-clock-svg { opacity: 1; }
+
+  /* ─── RESPONSIVE ─── */
+  @media(max-width:600px){
+    .conv-row { grid-template-columns: 1fr; }
+    .swap-btn { transform: rotate(90deg); margin: 0 auto; }
+    .swap-btn:hover { transform: rotate(270deg); }
+  }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 100px; }
+
+  /* ─── FOOTER ─── */
+  footer {
+    text-align: center;
+    padding: 2rem 0 1rem;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo-tag">⬡ Multi-Tool Suite</div>
+    <h1>NEXUS TOOLKIT</h1>
+    <p class="subtitle">Calculator · Converter · BMI · World Clock</p>
+  </header>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <button class="nav-btn active" onclick="switchTab('calc',this)">⬢ Calculator</button>
+    <button class="nav-btn" onclick="switchTab('conv',this)">⬡ Converter</button>
+    <button class="nav-btn" onclick="switchTab('bmi',this)">◈ BMI Index</button>
+    <button class="nav-btn" onclick="switchTab('clock',this)">◉ World Clock</button>
+  </nav>
+
+  <!-- ══════════════════ CALCULATOR ══════════════════ -->
+  <div class="panel active" id="panel-calc">
+    <div class="card" style="max-width:440px;margin:0 auto;">
+      <div class="card-title"><span class="dot"></span> Scientific Calculator</div>
+      <div class="calc-wrap">
+        <div class="calc-display">
+          <div class="calc-expr" id="c-expr"></div>
+          <div class="calc-value" id="c-val">0</div>
+        </div>
+        <div class="calc-grid">
+          <!-- Row 1 -->
+          <button class="calc-btn ac" onclick="calcAC()">AC</button>
+          <button class="calc-btn op" onclick="calcSign()">+/-</button>
+          <button class="calc-btn op" onclick="calcPct()">%</button>
+          <button class="calc-btn op" onclick="calcOp('/')">÷</button>
+          <!-- Row 2 -->
+          <button class="calc-btn" onclick="calcNum('7')">7</button>
+          <button class="calc-btn" onclick="calcNum('8')">8</button>
+          <button class="calc-btn" onclick="calcNum('9')">9</button>
+          <button class="calc-btn op" onclick="calcOp('*')">×</button>
+          <!-- Row 3 -->
+          <button class="calc-btn" onclick="calcNum('4')">4</button>
+          <button class="calc-btn" onclick="calcNum('5')">5</button>
+          <button class="calc-btn" onclick="calcNum('6')">6</button>
+          <button class="calc-btn op" onclick="calcOp('-')">−</button>
+          <!-- Row 4 -->
+          <button class="calc-btn" onclick="calcNum('1')">1</button>
+          <button class="calc-btn" onclick="calcNum('2')">2</button>
+          <button class="calc-btn" onclick="calcNum('3')">3</button>
+          <button class="calc-btn op" onclick="calcOp('+')">+</button>
+          <!-- Row 5 -->
+          <button class="calc-btn span2" onclick="calcNum('0')">0</button>
+          <button class="calc-btn" onclick="calcDot()">.</button>
+          <button class="calc-btn eq" onclick="calcEq()">=</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ CONVERTER ══════════════════ -->
+  <div class="panel" id="panel-conv">
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent3);box-shadow:0 0 8px var(--accent3);animation:pulse 2s infinite;"></span> Unit Converter</div>
+      <div class="conv-tabs" id="conv-tabs"></div>
+      <div class="conv-row">
+        <div class="conv-field">
+          <span class="conv-label">From</span>
+          <input class="conv-input" id="conv-from-val" type="number" value="1" oninput="doConvert()">
+          <select class="conv-select" id="conv-from-unit" onchange="doConvert()"></select>
+        </div>
+        <button class="swap-btn" onclick="swapConv()" title="Swap">⇆</button>
+        <div class="conv-field">
+          <span class="conv-label">To</span>
+          <input class="conv-input" id="conv-to-val" type="number" readonly style="cursor:default;">
+          <select class="conv-select" id="conv-to-unit" onchange="doConvert()"></select>
+        </div>
+      </div>
+      <div class="conv-result" id="conv-result">—</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ BMI ══════════════════ -->
+  <div class="panel" id="panel-bmi">
+    <div class="card" style="max-width:540px;margin:0 auto;">
+      <div class="card-title"><span class="dot" style="background:var(--accent2);box-shadow:0 0 8px var(--accent2);"></span> BMI Calculator</div>
+      <div class="unit-toggle">
+        <button class="unit-btn active" id="bmi-metric" onclick="setBmiUnit('metric')">Metric (kg/cm)</button>
+        <button class="unit-btn" id="bmi-imperial" onclick="setBmiUnit('imperial')">Imperial (lbs/ft)</button>
+      </div>
+      <div class="bmi-grid" id="bmi-inputs">
+        <div class="inp-group">
+          <label class="inp-label" id="lbl-height">Height (cm)</label>
+          <input class="inp-field" id="bmi-height" type="number" placeholder="175" min="0">
+        </div>
+        <div class="inp-group">
+          <label class="inp-label" id="lbl-weight">Weight (kg)</label>
+          <input class="inp-field" id="bmi-weight" type="number" placeholder="70" min="0">
+        </div>
+        <div class="inp-group">
+          <label class="inp-label">Age</label>
+          <input class="inp-field" id="bmi-age" type="number" placeholder="25" min="0">
+        </div>
+        <div class="inp-group">
+          <label class="inp-label">Gender</label>
+          <select class="inp-field" id="bmi-gender">
+            <option value="">Prefer not to say</option>
+            <option value="m">Male</option>
+            <option value="f">Female</option>
+          </select>
+        </div>
+      </div>
+      <button class="calc-action-btn" onclick="calcBmi()">Calculate BMI</button>
+
+      <div class="bmi-result-area" id="bmi-result">
+        <div class="bmi-value-big" id="bmi-num">—</div>
+        <div class="bmi-category" id="bmi-cat">—</div>
+        <div class="bmi-tip" id="bmi-tip"></div>
+        <div class="bmi-meter-wrap">
+          <div class="bmi-meter">
+            <div class="bmi-needle" id="bmi-needle" style="left:0%"></div>
+          </div>
+          <div class="bmi-labels">
+            <span>Underweight</span><span>Normal</span><span>Overweight</span><span>Obese</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ WORLD CLOCK ══════════════════ -->
+  <div class="panel" id="panel-clock">
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--gold);box-shadow:0 0 8px var(--gold);"></span> World Clock</div>
+      <div class="clock-grid" id="clock-grid"></div>
+    </div>
+  </div>
+
+  <footer>NEXUS TOOLKIT &mdash; Built with passion &amp; code &mdash; 2025</footer>
+</div>
+
+<script>
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  TAB SWITCHING
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function switchTab(id, btn) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  CALCULATOR
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+let cCurrent = '0', cPrev = '', cOp = null, cFresh = false;
+const cVal = document.getElementById('c-val');
+const cExpr = document.getElementById('c-expr');
+
+function cUpdate(v) {
+  cVal.textContent = (+v).toLocaleString('en', {maximumFractionDigits:10});
+  cVal.classList.remove('pop');
+  void cVal.offsetWidth;
+  cVal.classList.add('pop');
+}
+function calcNum(n) {
+  if (cFresh) { cCurrent = n; cFresh = false; }
+  else cCurrent = cCurrent === '0' ? n : cCurrent + n;
+  cUpdate(cCurrent);
+}
+function calcDot() {
+  if (cFresh) { cCurrent = '0.'; cFresh = false; }
+  else if (!cCurrent.includes('.')) cCurrent += '.';
+  cVal.textContent = cCurrent;
+}
+function calcOp(op) {
+  if (cPrev && !cFresh) calcEq(true);
+  cPrev = cCurrent; cOp = op; cFresh = true;
+  const sym = {'/':'÷','*':'×','-':'−','+':'+'}[op];
+  cExpr.textContent = cPrev + ' ' + sym;
+}
+function calcEq(stay=false) {
+  if (!cOp || !cPrev) return;
+  const a = parseFloat(cPrev), b = parseFloat(cCurrent);
+  let r;
+  switch(cOp){
+    case '+': r=a+b; break; case '-': r=a-b; break;
+    case '*': r=a*b; break; case '/': r=b===0?'Error':a/b; break;
+  }
+  if (!stay) {
+    cExpr.textContent = cPrev + ' ' + {'/':'÷','*':'×','-':'−','+':'+'}[cOp] + ' ' + cCurrent + ' =';
+    cOp = null; cPrev = '';
+  }
+  cCurrent = String(r);
+  cUpdate(r);
+  cFresh = true;
+}
+function calcAC() {
+  cCurrent='0'; cPrev=''; cOp=null; cFresh=false;
+  cVal.textContent='0'; cExpr.textContent='';
+}
+function calcSign() { cCurrent = String(-parseFloat(cCurrent)); cUpdate(cCurrent); }
+function calcPct() { cCurrent = String(parseFloat(cCurrent)/100); cUpdate(cCurrent); }
+
+// keyboard support
+document.addEventListener('keydown', e => {
+  if (document.getElementById('panel-calc').classList.contains('active')) {
+    const k = e.key;
+    if ('0123456789'.includes(k)) calcNum(k);
+    else if (k==='.') calcDot();
+    else if (k==='+') calcOp('+');
+    else if (k==='-') calcOp('-');
+    else if (k==='*') calcOp('*');
+    else if (k==='/') { e.preventDefault(); calcOp('/'); }
+    else if (k==='Enter'||k==='=') calcEq();
+    else if (k==='Escape') calcAC();
+    else if (k==='Backspace') {
+      if (cCurrent.length>1) cCurrent=cCurrent.slice(0,-1);
+      else cCurrent='0';
+      cUpdate(parseFloat(cCurrent));
+    }
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  UNIT CONVERTER
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const CONV_DATA = {
+  Length: {
+    Meter:1, Kilometer:1e-3, Centimeter:100, Millimeter:1000,
+    Mile:1/1609.34, Yard:1/0.9144, Foot:1/0.3048, Inch:1/0.0254,
+    Nautical_Mile:1/1852
+  },
+  Weight: {
+    Kilogram:1, Gram:1000, Pound:2.20462, Ounce:35.274,
+    Tonne:0.001, Stone:0.157473, Milligram:1e6
+  },
+  Temperature: { Celsius:'C', Fahrenheit:'F', Kelvin:'K' },
+  Area: {
+    'Sq Meter':1, 'Sq Kilometer':1e-6, 'Sq Mile':3.861e-7,
+    Hectare:1e-4, Acre:0.000247105, 'Sq Foot':10.7639, 'Sq Inch':1550
+  },
+  Volume: {
+    Liter:1, Milliliter:1000, Gallon:0.264172, Pint:2.11338,
+    Cup:4.22675, 'Fluid Oz':33.814, 'Cubic Meter':0.001, 'Cubic Cm':1000
+  },
+  Speed: {
+    'm/s':1, 'km/h':3.6, mph:2.23694, Knot:1.94384, 'ft/s':3.28084
+  },
+  Time: {
+    Second:1, Minute:1/60, Hour:1/3600, Day:1/86400,
+    Week:1/604800, Month:1/2.628e6, Year:1/3.154e7, Millisecond:1000
+  },
+  Pressure: {
+    Pascal:1, Bar:1e-5, PSI:1.45038e-4, Atmosphere:9.869e-6,
+    Torr:7.50062e-3, 'kPa':0.001
+  },
+  Energy: {
+    Joule:1, Kilojoule:0.001, Calorie:0.239006, Kilocalorie:2.39006e-4,
+    'kWh':2.778e-7, BTU:9.478e-4, 'Foot-Pound':0.737562
+  }
+};
+
+let convCat = 'Length';
+const tabsEl = document.getElementById('conv-tabs');
+const fromSel = document.getElementById('conv-from-unit');
+const toSel = document.getElementById('conv-to-unit');
+const fromVal = document.getElementById('conv-from-val');
+const toValEl = document.getElementById('conv-to-val');
+const convRes = document.getElementById('conv-result');
+
+function buildConvTabs() {
+  tabsEl.innerHTML = '';
+  Object.keys(CONV_DATA).forEach(cat => {
+    const t = document.createElement('button');
+    t.className = 'conv-tab' + (cat===convCat?' active':'');
+    t.textContent = cat;
+    t.onclick = () => { convCat=cat; buildConvTabs(); populateConvUnits(); doConvert(); };
+    tabsEl.appendChild(t);
+  });
+}
+function populateConvUnits() {
+  const units = Object.keys(CONV_DATA[convCat]);
+  [fromSel,toSel].forEach((s,i)=>{
+    s.innerHTML='';
+    units.forEach(u=>{ const o=document.createElement('option'); o.value=u; o.textContent=u; s.appendChild(o); });
+    s.selectedIndex = i===1 ? 1 : 0;
+  });
+}
+function convertTemp(v,from,to) {
+  let c;
+  if(from==='Celsius') c=v;
+  else if(from==='Fahrenheit') c=(v-32)*5/9;
+  else c=v-273.15;
+  if(to==='Celsius') return c;
+  if(to==='Fahrenheit') return c*9/5+32;
+  return c+273.15;
+}
+function doConvert() {
+  const v = parseFloat(fromVal.value);
+  if(isNaN(v)){ toValEl.value=''; convRes.textContent='—'; return; }
+  const from=fromSel.value, to=toSel.value, units=CONV_DATA[convCat];
+  let result;
+  if(convCat==='Temperature') result=convertTemp(v,from,to);
+  else result = v / units[from] * units[to];
+  const fmt = n => n < 1e-4 || n > 1e10 ? n.toExponential(4) : parseFloat(n.toFixed(8));
+  toValEl.value = fmt(result);
+  convRes.innerHTML = `${v} ${from} = <strong>${fmt(result)} ${to}</strong>`;
+}
+function swapConv() {
+  const tmp=fromSel.value; fromSel.value=toSel.value; toSel.value=tmp;
+  fromVal.value=toValEl.value;
+  doConvert();
+}
+buildConvTabs(); populateConvUnits(); doConvert();
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  BMI CALCULATOR
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+let bmiUnit = 'metric';
+function setBmiUnit(u) {
+  bmiUnit = u;
+  document.getElementById('bmi-metric').classList.toggle('active', u==='metric');
+  document.getElementById('bmi-imperial').classList.toggle('active', u==='imperial');
+  const hLbl = document.getElementById('lbl-height');
+  const wLbl = document.getElementById('lbl-weight');
+  const hInp = document.getElementById('bmi-height');
+  const wInp = document.getElementById('bmi-weight');
+  if(u==='metric'){ hLbl.textContent='Height (cm)'; wLbl.textContent='Weight (kg)'; hInp.placeholder='175'; wInp.placeholder='70'; }
+  else { hLbl.textContent='Height (ft)'; wLbl.textContent='Weight (lbs)'; hInp.placeholder='5.9'; wInp.placeholder='154'; }
+}
+function calcBmi() {
+  let h=parseFloat(document.getElementById('bmi-height').value);
+  let w=parseFloat(document.getElementById('bmi-weight').value);
+  if(!h||!w||h<=0||w<=0){ alert('Please enter valid height and weight.'); return; }
+  if(bmiUnit==='imperial'){ h*=0.3048; w*=0.453592; } // ft→m, lbs→kg
+  else h/=100; // cm→m
+  const bmi = w/(h*h);
+  let cat, color, tip, pct;
+  if(bmi<18.5){ cat='Underweight'; color='var(--accent)'; tip='Consider consulting a nutritionist.'; pct=bmi/40*100*0.4; }
+  else if(bmi<25){ cat='Normal Weight'; color='var(--accent3)'; tip='Great! Maintain a balanced diet & exercise.'; pct=18+(bmi-18.5)/6.5*20; }
+  else if(bmi<30){ cat='Overweight'; color='var(--gold)'; tip='Light activity & dietary changes can help.'; pct=38+(bmi-25)/5*22; }
+  else { cat='Obese'; color='var(--accent4)'; tip='Please consult a healthcare professional.'; pct=Math.min(60+(bmi-30)/10*40,95); }
+  document.getElementById('bmi-num').textContent=bmi.toFixed(1);
+  document.getElementById('bmi-num').style.color=color;
+  document.getElementById('bmi-cat').textContent=cat;
+  document.getElementById('bmi-cat').style.color=color;
+  document.getElementById('bmi-tip').textContent=tip;
+  document.getElementById('bmi-needle').style.left=pct+'%';
+  const area=document.getElementById('bmi-result');
+  area.classList.add('show');
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  WORLD CLOCK
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const CITIES = [
+  { city:'Tokyo',       country:'Japan 🇯🇵',      tz:'Asia/Tokyo',              color:'c1' },
+  { city:'New York',    country:'USA 🇺🇸',          tz:'America/New_York',        color:'c2' },
+  { city:'London',      country:'UK 🇬🇧',            tz:'Europe/London',           color:'c3' },
+  { city:'Paris',       country:'France 🇫🇷',        tz:'Europe/Paris',            color:'c4' },
+  { city:'Dubai',       country:'UAE 🇦🇪',           tz:'Asia/Dubai',              color:'c5' },
+  { city:'Sydney',      country:'Australia 🇦🇺',     tz:'Australia/Sydney',        color:'c6' },
+  { city:'Los Angeles', country:'USA 🇺🇸',          tz:'America/Los_Angeles',     color:'c1' },
+  { city:'Singapore',   country:'Singapore 🇸🇬',     tz:'Asia/Singapore',          color:'c2' },
+  { city:'Mumbai',      country:'India 🇮🇳',         tz:'Asia/Kolkata',            color:'c3' },
+  { city:'São Paulo',   country:'Brazil 🇧🇷',        tz:'America/Sao_Paulo',       color:'c4' },
+  { city:'Cairo',       country:'Egypt 🇪🇬',         tz:'Africa/Cairo',            color:'c5' },
+  { city:'Seoul',       country:'South Korea 🇰🇷',   tz:'Asia/Seoul',              color:'c6' },
+];
+
+const clockGrid = document.getElementById('clock-grid');
+CITIES.forEach(c => {
+  const card = document.createElement('div');
+  card.className = `clock-card ${c.color}`;
+  card.id = 'clk-' + c.tz.replace(/\//g,'-');
+  card.innerHTML = `
+    <span class="clock-city">${c.city}</span>
+    <div class="clock-country">${c.country}</div>
+    <div class="clock-time" id="t-${c.tz.replace(/\//g,'-')}">00:00<span class="clock-secs">:00</span><span class="clock-ampm"></span></div>
+    <div class="clock-date" id="d-${c.tz.replace(/\//g,'-')}">—</div>
+    <svg class="mini-clock-svg" id="svg-${c.tz.replace(/\//g,'-')}" width="44" height="44" viewBox="0 0 44 44">
+      <circle cx="22" cy="22" r="20" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>
+      <circle cx="22" cy="22" r="1.5" fill="rgba(255,255,255,0.4)"/>
+      <line id="h-${c.tz.replace(/\//g,'-')}" x1="22" y1="22" x2="22" y2="10" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/>
+      <line id="m-${c.tz.replace(/\//g,'-')}" x1="22" y1="22" x2="22" y2="7" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-linecap="round"/>
+      <line id="s-${c.tz.replace(/\//g,'-')}" x1="22" y1="22" x2="22" y2="5" stroke="rgba(56,189,248,0.7)" stroke-width="1" stroke-linecap="round"/>
+    </svg>
+  `;
+  clockGrid.appendChild(card);
+});
+
+function deg(cx,cy,r,angle){ const rad=(angle-90)*Math.PI/180; return [cx+r*Math.cos(rad), cy+r*Math.sin(rad)]; }
+
+function updateClocks() {
+  const now = new Date();
+  CITIES.forEach(c => {
+    const id = c.tz.replace(/\//g,'-');
+    try {
+      const locale = now.toLocaleString('en-US', { timeZone:c.tz, hour:'numeric', minute:'2-digit', second:'2-digit', hour12:true });
+      const parts = now.toLocaleString('en-US', { timeZone:c.tz, hour:'numeric', minute:'2-digit', second:'2-digit', hour12:false }).match(/(\d+):(\d+):(\d+)/);
+      if(!parts) return;
+      const h=parseInt(parts[1])%12, mi=parseInt(parts[2]), s=parseInt(parts[3]);
+      const ampm = now.toLocaleString('en-US',{timeZone:c.tz,hour:'numeric',hour12:true}).includes('AM')?'AM':'PM';
+      const hDisp = String(h===0?12:h).padStart(2,'0');
+      document.getElementById('t-'+id).innerHTML=`${hDisp}:${String(mi).padStart(2,'0')}<span class="clock-secs">:${String(s).padStart(2,'0')}</span><span class="clock-ampm">${ampm}</span>`;
+      const dateStr = now.toLocaleString('en-US',{timeZone:c.tz,weekday:'short',month:'short',day:'numeric',year:'numeric'});
+      document.getElementById('d-'+id).textContent=dateStr;
+      // analog
+      const hAngle=(h+mi/60)*30, mAngle=(mi+s/60)*6, sAngle=s*6;
+      function setHand(id2, angle, r) {
+        const el=document.getElementById(id2);
+        if(!el) return;
+        const rad=(angle-90)*Math.PI/180;
+        const x=22+r*Math.cos(rad), y=22+r*Math.sin(rad);
+        el.setAttribute('x2',x); el.setAttribute('y2',y);
+      }
+      setHand('h-'+id, hAngle, 10);
+      setHand('m-'+id, mAngle, 13);
+      setHand('s-'+id, sAngle, 15);
+    } catch(e){}
+  });
+}
+updateClocks();
+setInterval(updateClocks, 1000);
+</script>
+</body>
+</html>
